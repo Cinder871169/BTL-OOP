@@ -1,5 +1,5 @@
-import javax.sound.sampled.*;
 import java.net.URL;
+import javax.sound.sampled.*;
 
 public class MusicPlayer {
     private Clip clip;
@@ -11,7 +11,7 @@ public class MusicPlayer {
             clip = AudioSystem.getClip();
             clip.open(ais);
             FloatControl volumeControl = (FloatControl) clip.getControl(FloatControl.Type.MASTER_GAIN);
-            volumeControl.setValue(-7.0f);
+            volumeControl.setValue(-10.0f);
         } catch (Exception e) {
             e.printStackTrace();
         }
