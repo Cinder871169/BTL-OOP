@@ -29,6 +29,8 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
 
     private Thread thread;
 
+    private MusicPlayer musicPlayer;
+
     public GamePanel() {
         setPreferredSize(new Dimension(WIDTH, HEIGHT));
         setBackground(new Color(150, 255, 245));
@@ -37,6 +39,9 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
 
         loadImages();
         initializeObjects();
+
+        musicPlayer = new MusicPlayer("/sound/theme.wav");
+        musicPlayer.loop();
 
         thread = new Thread(this);
         thread.start();
@@ -117,6 +122,7 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
         if (playerHealth <= 0) {
             playerHealth = 0;
             gameOver = true;
+            musicPlayer.stop();
         }
 
         if (enemyCount % enemySpawnFrequency == 0) {
