@@ -77,9 +77,9 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
     private void update() {
         enemyCount++;
 
-        if (move == 1)
+        if (move == 1 && player.x + TILE < WIDTH)
             player.x += player.vx;
-        else if (move == -1)
+        else if (move == -1 && player.x > 0)
             player.x -= player.vx;
 
         if (shoot == 1) {
@@ -181,10 +181,10 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
         g.drawString("TIME   " + enemyCount, 5, 55);
 
         if (gameOver) {
-            g.setColor(Color.RED);
-            g.setFont(new Font("Arial", Font.BOLD, 55));
-            g.drawString("GAME OVER", WIDTH / 2 - 130, HEIGHT / 2);
-            g.drawString("Press SPACE to return to main menu", WIDTH / 2 - 150, HEIGHT / 2);
+            g.setColor(Color.GREEN);
+            g.setFont(new Font("Arial", Font.BOLD, 40));
+            g.drawString("GAME OVER", WIDTH / 2 - 150, HEIGHT / 2 - 50);
+            g.drawString("Press SPACE to return to main menu", WIDTH / 2 - 300, HEIGHT / 2 + 50);
         }
 
         g.dispose();
