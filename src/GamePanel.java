@@ -175,15 +175,16 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
             g.drawImage(enemyImg, enemy.x, enemy.y, TILE, TILE, null);
 
         g.setColor(Color.WHITE);
-        g.setFont(new Font("Arial", Font.PLAIN, 35));
-        g.drawString("SCORE  " + playerScore, 5, 40);
-        g.drawString("HEALTH " + playerHealth, 5, 85);
-        g.drawString("TIME   " + enemyCount, 5, 130);
+        g.setFont(new Font("Arial", Font.PLAIN, 15));
+        g.drawString("SCORE  " + playerScore, 5, 15);
+        g.drawString("HEALTH " + playerHealth, 5, 35);
+        g.drawString("TIME   " + enemyCount, 5, 55);
 
         if (gameOver) {
             g.setColor(Color.RED);
             g.setFont(new Font("Arial", Font.BOLD, 55));
             g.drawString("GAME OVER", WIDTH / 2 - 130, HEIGHT / 2);
+            g.drawString("Press SPACE to return to main menu", WIDTH / 2 - 150, HEIGHT / 2);
         }
 
         g.dispose();
@@ -191,17 +192,30 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
 
     @Override
     public void keyPressed(KeyEvent e) {
-        switch (e.getKeyCode()) {
-            case KeyEvent.VK_A -> move = -1;
-            case KeyEvent.VK_D -> move = 1;
-            case KeyEvent.VK_SPACE -> {
-                if (shoot == 0) {
-                    bullet.x = player.x;
-                    bullet.y = player.y + 20;
-                    shoot = 1;
+        if (gameOver && e.getKeyCode() == KeyEvent.VK_SPACE) {
+            returnToMainMenu();
+        } else {
+            switch (e.getKeyCode()) {
+                case KeyEvent.VK_A -> move = -1;
+                case KeyEvent.VK_D -> move = 1;
+                case KeyEvent.VK_SPACE -> {
+                    if (shoot == 0) {
+                        bullet.x = player.x;
+                        bullet.y = player.y + 20;
+                        shoot = 1;
+                    }
                 }
             }
         }
+    }
+
+    private void returnToMainMenu() {
+        JFrame topFrame = (JFrame) SwingUtilities.getWindowAncestor(this);
+        topFrame.remove(this); // Remove the game panel
+        MainMenu mainMenu = new MainMenu(); // Create a new main menu
+        topFrame.add(mainMenu); // Add it to the frame
+        topFrame.revalidate();
+        topFrame.repaint();
     }
 
     @Override
