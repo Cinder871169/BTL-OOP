@@ -120,6 +120,8 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
                 int impact = random.nextInt(ConfigLoader.getInt("enemy.healthImpactMax") -
                         ConfigLoader.getInt("enemy.healthImpactMin")) +
                         ConfigLoader.getInt("enemy.healthImpactMin");
+                hitSound = new MusicPlayer("/sound/hit.wav");
+                hitSound.play();
                 playerHealth -= impact;
                 resetEnemy(enemy);
             }
