@@ -4,8 +4,8 @@ public class Main {
 
     public static void main(String[] args) {
         JFrame frame = new JFrame("Game");
-        GamePanel gamePanel = new GamePanel();
-        frame.add(gamePanel);
+        MainMenu mainMenu = new MainMenu();
+        frame.add(mainMenu);
         frame.pack();
         frame.setResizable(false);
         frame.setLocationRelativeTo(null);
