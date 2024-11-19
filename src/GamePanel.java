@@ -104,7 +104,7 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
             bullet.y -= bullet.vy;
             if (bullet.y < -TILE)
                 shoot = 0;
-        }
+        }            
         for (Item enemy : enemies) {
             enemy.y += enemy.vy;
 
@@ -239,12 +239,12 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
                 case KeyEvent.VK_W -> moveY = -1; // Di chuyển lên
                 case KeyEvent.VK_S -> moveY = 1;  // Di chuyển xuống
                 case KeyEvent.VK_SPACE -> {
-                    if (shoot == 0) {
+                    if (!paused && shoot == 0) { // Chỉ bắn khi không đang pause
                         bullet.x = player.x;
                         bullet.y = player.y + 20;
                         shoot = 1;
                     }
-                }
+                }                
                 case KeyEvent.VK_P -> {
                     paused = !paused; // Toggle paused state
                 }
