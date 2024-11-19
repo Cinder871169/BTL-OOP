@@ -19,14 +19,14 @@ public class MusicPlayer {
 
     public void play() {
         if (clip != null) {
-            clip.setMicrosecondPosition(0); // Restart the clip if it is already playing
+            clip.setMicrosecondPosition(0);
             clip.start();
         }
     }
 
     public void loop() {
         if (clip != null) {
-            clip.loop(Clip.LOOP_CONTINUOUSLY); // Loop the music indefinitely
+            clip.loop(Clip.LOOP_CONTINUOUSLY);
         }
     }
 
