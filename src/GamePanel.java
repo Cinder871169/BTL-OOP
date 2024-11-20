@@ -56,10 +56,10 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
 
     private void loadBackgroundImages() {
         long etime = System.currentTimeMillis() - startTime;
-        int frameIndex = (int) ((etime / 100) % 10) ;
+        int frameIndex = (int) ((etime / 100) % 10);
         String backgroundImgPath = String.format("/images/background/background%d.png", frameIndex + 1);
         try {
-            
+
             backgroundImg = ImageIO.read(getClass().getResource(backgroundImgPath));
         } catch (Exception e) {
             e.printStackTrace();
@@ -68,7 +68,7 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
 
     private void loadEnemyImages() {
         long etime = System.currentTimeMillis() - startTime;
-        int frameIndex = (int) ((etime / 100) % 10) ;
+        int frameIndex = (int) ((etime / 100) % 10);
         String enemyImgPath = String.format("/images/enemies/enemies1/1fighter/1fighter%d.png", frameIndex + 1);
         try {
             enemyImg = ImageIO.read(getClass().getResource(enemyImgPath));
@@ -79,7 +79,7 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
 
     private void loadPlayerBulletImages() {
         long etime = System.currentTimeMillis() - startTime;
-        int frameIndex = (int) ((etime / 100) % 4) ;
+        int frameIndex = (int) ((etime / 100) % 4);
         String pbulletImgPath = String.format("/images/PlayerBullet/bullet%d.png", frameIndex + 1);
         try {
             bulletImg = ImageIO.read(getClass().getResource(pbulletImgPath));
@@ -88,8 +88,8 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
         }
     }
 
-    //bulletImg = ImageIO.read(getClass().getResource("/images/bullet.png"));
-    //enemyImg = ImageIO.read(getClass().getResource("/images/enemy.png"));
+    // bulletImg = ImageIO.read(getClass().getResource("/images/bullet.png"));
+    // enemyImg = ImageIO.read(getClass().getResource("/images/enemy.png"));
 
     private void initializeObjects() {
         player = new Item();
@@ -100,11 +100,10 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
             // Nếu người chơi chưa chọn tàu, sử dụng tàu mặc định
             try {
                 selectedSpaceship = new Spaceship(
-                    ImageIO.read(getClass().getResource(ConfigLoader.getString("spaceship1.image"))),
-                    ConfigLoader.getInt("spaceship1.hp"),
-                    ConfigLoader.getInt("spaceship1.damage"),
-                    ConfigLoader.getInt("spaceship1.speed")
-                );
+                        ImageIO.read(getClass().getResource(ConfigLoader.getString("spaceship1.image"))),
+                        ConfigLoader.getInt("spaceship1.hp"),
+                        ConfigLoader.getInt("spaceship1.damage"),
+                        ConfigLoader.getInt("spaceship1.speed"));
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -195,10 +194,10 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
     }
 
     private boolean checkCollision(Item a, Item b) {
-        int dx = (a.x - b.x) * (a.x - b.x);
-        int dy = (a.y - b.y) * (a.y - b.y);
-        double distance = Math.sqrt(dx + dy);
-        return distance < TILE;
+        return a.x < b.x + TILE &&
+                a.x + TILE > b.x &&
+                a.y < b.y + TILE &&
+                a.y + TILE > b.y;
     }
 
     private void resetEnemy(Item enemy) {
@@ -235,7 +234,7 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
 
         if (shoot == 1) {
             loadPlayerBulletImages();
-            g.drawImage(bulletImg, bullet.x, bullet.y, TILE, TILE, null);
+            g.drawImage(bulletImg, bullet.x, bullet.y, 16, 64, null);
         }
         if (!gameOver)
             g.drawImage(playerImg, player.x, player.y, TILE, TILE, null);

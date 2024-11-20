@@ -31,7 +31,7 @@ public class MainMenu extends JPanel {
         spaceshipSelectButton = new JButton("Select Spaceship");
         spaceshipSelectButton.setBounds(500, 300, 200, 50);
         spaceshipSelectButton.setFont(new Font("Arial", Font.BOLD, 14));
-        spaceshipSelectButton.addActionListener(e -> openSpaceshipSelection());    
+        spaceshipSelectButton.addActionListener(e -> openSpaceshipSelection());
 
         exitButton = new JButton("Exit");
         exitButton.setBounds(500, 400, 200, 50);
@@ -42,7 +42,7 @@ public class MainMenu extends JPanel {
         add(spaceshipSelectButton);
         add(exitButton);
     }
-    
+
     private void openSpaceshipSelection() {
         JFrame spaceshipSelectionFrame = new JFrame("Select Your Spaceship");
         SpaceshipSelectionPanel selectionPanel = new SpaceshipSelectionPanel();
@@ -50,7 +50,7 @@ public class MainMenu extends JPanel {
         spaceshipSelectionFrame.pack();
         spaceshipSelectionFrame.setLocationRelativeTo(null);
         spaceshipSelectionFrame.setVisible(true);
-    
+
         // Khi người chơi chọn tàu, cập nhật tàu vào trò chơi
         spaceshipSelectionFrame.addWindowListener(new java.awt.event.WindowAdapter() {
             @Override
@@ -72,12 +72,12 @@ public class MainMenu extends JPanel {
     private void startGame() {
         JFrame topFrame = (JFrame) SwingUtilities.getWindowAncestor(this);
         topFrame.remove(this);
-    
+
         GamePanel gamePanel = new GamePanel();
         topFrame.add(gamePanel);
         topFrame.revalidate();
         topFrame.repaint();
-    
+
         gamePanel.requestFocus();
     }
 }
