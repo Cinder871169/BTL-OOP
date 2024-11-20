@@ -1,6 +1,7 @@
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.image.BufferedImage;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Random;
 import javax.imageio.ImageIO;
@@ -10,6 +11,7 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
     public static final int WIDTH = 1280;
     public static final int HEIGHT = 720;
     public static final int TILE = 64;
+    public static Spaceship selectedSpaceship;
 
     private boolean gameOver = false;
     private Random random = new Random();
@@ -68,8 +70,24 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
         player = new Item();
         player.x = ConfigLoader.getInt("player.initialX");
         player.y = ConfigLoader.getInt("player.initialY");
-        player.vx = ConfigLoader.getInt("player.velocityX");
-        playerHealth = ConfigLoader.getInt("player.health");
+
+        if (selectedSpaceship == null) {
+            // Nếu người chơi chưa chọn tàu, sử dụng tàu mặc định
+            try {
+                selectedSpaceship = new Spaceship(
+                    ImageIO.read(getClass().getResource(ConfigLoader.getString("spaceship1.image"))),
+                    ConfigLoader.getInt("spaceship1.hp"),
+                    ConfigLoader.getInt("spaceship1.damage"),
+                    ConfigLoader.getInt("spaceship1.speed")
+                );
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        playerImg = selectedSpaceship.getImage();
+        playerHealth = selectedSpaceship.getHp();
+        player.vx = selectedSpaceship.getSpeed();
 
         bullet = new Item();
         bullet.vy = ConfigLoader.getInt("bullet.velocityY");
