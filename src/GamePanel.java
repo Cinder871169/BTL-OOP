@@ -54,19 +54,42 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
         thread.start();
     }
 
-    private void loadImages() {
+    private void loadBackgroundImages() {
         long etime = System.currentTimeMillis() - startTime;
         int frameIndex = (int) ((etime / 100) % 10) ;
         String backgroundImgPath = String.format("/images/background/background%d.png", frameIndex + 1);
         try {
             
             backgroundImg = ImageIO.read(getClass().getResource(backgroundImgPath));
-            bulletImg = ImageIO.read(getClass().getResource("/images/bullet.png"));
-            enemyImg = ImageIO.read(getClass().getResource("/images/enemy.png"));
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
+
+    private void loadEnemyImages() {
+        long etime = System.currentTimeMillis() - startTime;
+        int frameIndex = (int) ((etime / 100) % 10) ;
+        String enemyImgPath = String.format("/images/enemies/enemies1/1fighter/1fighter%d.png", frameIndex + 1);
+        try {
+            enemyImg = ImageIO.read(getClass().getResource(enemyImgPath));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void loadPlayerBulletImages() {
+        long etime = System.currentTimeMillis() - startTime;
+        int frameIndex = (int) ((etime / 100) % 4) ;
+        String pbulletImgPath = String.format("/images/PlayerBullet/bullet%d.png", frameIndex + 1);
+        try {
+            bulletImg = ImageIO.read(getClass().getResource(pbulletImgPath));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    //bulletImg = ImageIO.read(getClass().getResource("/images/bullet.png"));
+    //enemyImg = ImageIO.read(getClass().getResource("/images/enemy.png"));
 
     private void initializeObjects() {
         player = new Item();
@@ -207,17 +230,20 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
     @Override
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
-        loadImages();
+        loadBackgroundImages();
         g.drawImage(backgroundImg, 0, 0, null);
 
-        if (shoot == 1)
+        if (shoot == 1) {
+            loadPlayerBulletImages();
             g.drawImage(bulletImg, bullet.x, bullet.y, TILE, TILE, null);
+        }
         if (!gameOver)
             g.drawImage(playerImg, player.x, player.y, TILE, TILE, null);
 
-        for (Item enemy : enemies)
+        for (Item enemy : enemies) {
+            loadEnemyImages();
             g.drawImage(enemyImg, enemy.x, enemy.y, TILE, TILE, null);
-
+        }
         g.setColor(Color.WHITE);
         g.setFont(new Font("Arial", Font.PLAIN, 15));
         g.drawString("SCORE  " + playerScore, 5, 15);
