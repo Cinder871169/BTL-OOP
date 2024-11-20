@@ -167,14 +167,6 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
                 playerHealth -= impact;
                 resetEnemy(enemy);
             }
-
-            if (enemy.y > HEIGHT + TILE) {
-                int impact = random.nextInt(ConfigLoader.getInt("enemy.healthImpactMax") -
-                        ConfigLoader.getInt("enemy.healthImpactMin")) +
-                        ConfigLoader.getInt("enemy.healthImpactMin");
-                playerHealth -= impact;
-                resetEnemy(enemy);
-            }
         }
 
         if (playerHealth <= 0) {
@@ -194,15 +186,16 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
     }
 
     private boolean checkCollision(Item a, Item b) {
-        return a.x < b.x + TILE &&
-                a.x + TILE > b.x &&
-                a.y < b.y + TILE &&
-                a.y + TILE > b.y;
+        Rectangle aBounds = new Rectangle(a.x, a.y, TILE, TILE);
+        Rectangle bBounds = new Rectangle(b.x, b.y, TILE, TILE);
+        return aBounds.intersects(bBounds);
     }
 
     private void resetEnemy(Item enemy) {
-        enemy.x = random.nextInt(WIDTH - TILE);
-        enemy.y = -random.nextInt(TILE);
+        do {
+            enemy.x = random.nextInt(WIDTH - TILE);
+            enemy.y = -random.nextInt(TILE);
+        } while (Math.abs(enemy.x - player.x) < TILE && Math.abs(enemy.y - player.y) < TILE);
     }
 
     @Override
