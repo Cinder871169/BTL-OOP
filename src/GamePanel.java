@@ -42,7 +42,6 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
         setFocusable(true);
         addKeyListener(this);
 
-        loadImages();
         initializeObjects();
 
         musicPlayer = new MusicPlayer("/sound/theme.wav");
@@ -56,9 +55,12 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
     }
 
     private void loadImages() {
+        long etime = System.currentTimeMillis() - startTime;
+        int frameIndex = (int) ((etime / 100) % 10) ;
+        String backgroundImgPath = String.format("/images/background/background%d.png", frameIndex + 1);
         try {
-            backgroundImg = ImageIO.read(getClass().getResource("/images/background.png"));
-            playerImg = ImageIO.read(getClass().getResource("/images/player.png"));
+            
+            backgroundImg = ImageIO.read(getClass().getResource(backgroundImgPath));
             bulletImg = ImageIO.read(getClass().getResource("/images/bullet.png"));
             enemyImg = ImageIO.read(getClass().getResource("/images/enemy.png"));
         } catch (Exception e) {
@@ -205,6 +207,7 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
     @Override
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
+        loadImages();
         g.drawImage(backgroundImg, 0, 0, null);
 
         if (shoot == 1)
