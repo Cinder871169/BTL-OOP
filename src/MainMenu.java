@@ -70,6 +70,7 @@ public class MainMenu extends JPanel {
     }
 
     private void startGame() {
+        musicPlayer.stop();
         JFrame topFrame = (JFrame) SwingUtilities.getWindowAncestor(this);
         topFrame.remove(this);
 
