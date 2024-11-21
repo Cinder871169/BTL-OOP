@@ -128,7 +128,9 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
     }
 
     private void update() {
+        loadBackgroundImages();
         enemyCount++;
+        loadEnemyImages();
 
         // Di chuyển ngang
         if (move == 1 && player.x + TILE < WIDTH)
@@ -142,6 +144,7 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
         else if (moveY == -1 && player.y > 0)
             player.y -= player.vx;
 
+        loadPlayerBulletImages();
         if (shoot == 1) {
             bullet.y -= bullet.vy;
             if (bullet.y < -TILE)
@@ -222,18 +225,15 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
     @Override
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
-        loadBackgroundImages();
         g.drawImage(backgroundImg, 0, 0, null);
 
         if (shoot == 1) {
-            loadPlayerBulletImages();
             g.drawImage(bulletImg, bullet.x + 23, bullet.y, 16, 64, null);
         }
         if (!gameOver)
             g.drawImage(playerImg, player.x, player.y, TILE, TILE, null);
 
         for (Item enemy : enemies) {
-            loadEnemyImages();
             g.drawImage(enemyImg, enemy.x, enemy.y, TILE, TILE, null);
         }
         g.setColor(Color.WHITE);
