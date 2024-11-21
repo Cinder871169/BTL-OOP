@@ -35,6 +35,7 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
     private Thread thread;
 
     private MusicPlayer musicPlayer, shootSound, hitSound;
+    private String enemyFolder = "enemy1";
 
     public GamePanel() {
         setPreferredSize(new Dimension(WIDTH, HEIGHT));
@@ -69,7 +70,7 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
     private void loadEnemyImages() {
         long etime = System.currentTimeMillis() - startTime;
         int frameIndex = (int) ((etime / 100) % 10);
-        String enemyImgPath = String.format("/images/enemies1/enemy1/enemy%d.png", frameIndex + 1);
+        String enemyImgPath = String.format("/images/enemies1/%s/enemy%d.png",enemyFolder, frameIndex + 1);
         try {
             enemyImg = ImageIO.read(getClass().getResource(enemyImgPath));
         } catch (Exception e) {
@@ -131,6 +132,11 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
         loadBackgroundImages();
         enemyCount++;
 
+        if (playerScore >= 50) {
+            enemyFolder = "enemy2";
+        } else if (playerScore >= 25) {
+            enemyFolder = "enemy3";
+        }
         // Di chuyển ngang
         if (move == 1 && player.x + TILE < WIDTH)
             player.x += player.vx;
