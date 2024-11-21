@@ -227,7 +227,7 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
 
         if (shoot == 1) {
             loadPlayerBulletImages();
-            g.drawImage(bulletImg, bullet.x, bullet.y, 16, 64, null);
+            g.drawImage(bulletImg, bullet.x + 23, bullet.y, 16, 64, null);
         }
         if (!gameOver)
             g.drawImage(playerImg, player.x, player.y, TILE, TILE, null);
