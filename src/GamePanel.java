@@ -69,7 +69,7 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
     private void loadEnemyImages() {
         long etime = System.currentTimeMillis() - startTime;
         int frameIndex = (int) ((etime / 100) % 10);
-        String enemyImgPath = String.format("/images/enemies/enemies1/1fighter/1fighter%d.png", frameIndex + 1);
+        String enemyImgPath = String.format("/images/enemies1/enemy1/enemy%d.png", frameIndex + 1);
         try {
             enemyImg = ImageIO.read(getClass().getResource(enemyImgPath));
         } catch (Exception e) {
@@ -130,7 +130,6 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
     private void update() {
         loadBackgroundImages();
         enemyCount++;
-        loadEnemyImages();
 
         // Di chuyển ngang
         if (move == 1 && player.x + TILE < WIDTH)
@@ -151,6 +150,7 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
                 shoot = 0;
         }
         for (Item enemy : enemies) {
+            loadEnemyImages();
             enemy.y += enemy.vy;
 
             if (checkCollision(bullet, enemy)) {
