@@ -1,31 +1,33 @@
 import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 import javax.imageio.ImageIO;
 import javax.swing.*;
 
 public class MainMenu extends JPanel {
     private JButton startButton, exitButton, spaceshipSelectButton;
     private MusicPlayer musicPlayer;
-    private BufferedImage menuImg;
+    private List<BufferedImage> menuImages; // Danh sách các ảnh
+    private int currentImageIndex = 0; // Chỉ số ảnh hiện tại
+    private Timer animationTimer; // Timer để thực hiện animation
 
     public MainMenu() {
         musicPlayer = new MusicPlayer("/sound/menu.wav");
         musicPlayer.loop();
 
-        try {
-            menuImg = ImageIO.read(getClass().getResourceAsStream("/images/menu.png"));
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        setLayout(null);
+        menuImages = new ArrayList<>();
+        loadImagesFromFolder("/images/menu"); // Load tất cả ảnh từ folder
 
+        setLayout(null);
         setPreferredSize(new Dimension(GamePanel.WIDTH, GamePanel.HEIGHT));
         setBackground(Color.BLACK);
 
-        // Create buttons
+        // Tạo các nút bấm
         startButton = new JButton("Start");
         startButton.setBounds(500, 200, 200, 50);
-        startButton.setFont(new Font("Arial", Font.BOLD, 24)); // Set the font size
+        startButton.setFont(new Font("Arial", Font.BOLD, 24));
         startButton.addActionListener(e -> startGame());
 
         spaceshipSelectButton = new JButton("Select Spaceship");
@@ -35,12 +37,35 @@ public class MainMenu extends JPanel {
 
         exitButton = new JButton("Exit");
         exitButton.setBounds(500, 400, 200, 50);
-        exitButton.setFont(new Font("Arial", Font.BOLD, 24)); // Set the font size
+        exitButton.setFont(new Font("Arial", Font.BOLD, 24));
         exitButton.addActionListener(e -> System.exit(0));
 
         add(startButton);
         add(spaceshipSelectButton);
         add(exitButton);
+
+        // Khởi động Timer để thay đổi ảnh
+        animationTimer = new Timer(30, e -> {
+            currentImageIndex = (currentImageIndex + 1) % menuImages.size();
+            repaint(); // Yêu cầu vẽ lại panel
+        });
+        animationTimer.start();
+    }
+
+    private void loadImagesFromFolder(String folderPath) {
+        try {
+            File folder = new File(getClass().getResource(folderPath).toURI());
+            File[] imageFiles = folder.listFiles((dir, name) -> name.endsWith(".png") || name.endsWith(".jpg"));
+
+            if (imageFiles != null) {
+                for (File file : imageFiles) {
+                    BufferedImage img = ImageIO.read(file);
+                    menuImages.add(img);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     private void openSpaceshipSelection() {
@@ -51,13 +76,12 @@ public class MainMenu extends JPanel {
         spaceshipSelectionFrame.setLocationRelativeTo(null);
         spaceshipSelectionFrame.setVisible(true);
 
-        // Khi người chơi chọn tàu, cập nhật tàu vào trò chơi
         spaceshipSelectionFrame.addWindowListener(new java.awt.event.WindowAdapter() {
             @Override
             public void windowClosing(java.awt.event.WindowEvent windowEvent) {
                 Spaceship selectedSpaceship = selectionPanel.getSelectedSpaceship();
                 if (selectedSpaceship != null) {
-                    GamePanel.selectedSpaceship = selectedSpaceship; // Truyền tàu vào GamePanel
+                    GamePanel.selectedSpaceship = selectedSpaceship;
                 }
             }
         });
@@ -66,10 +90,14 @@ public class MainMenu extends JPanel {
     @Override
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
-        g.drawImage(menuImg, 0, 0, null);
+        if (!menuImages.isEmpty()) {
+            BufferedImage currentImage = menuImages.get(currentImageIndex);
+            g.drawImage(currentImage, 0, 0, null);
+        }
     }
 
     private void startGame() {
+        animationTimer.stop(); // Dừng animation khi bắt đầu game
         musicPlayer.stop();
         JFrame topFrame = (JFrame) SwingUtilities.getWindowAncestor(this);
         topFrame.remove(this);
