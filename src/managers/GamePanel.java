@@ -11,6 +11,7 @@ import javax.swing.*;
 import main.MainMenu;
 import objects.Item;
 import objects.Spaceship;
+import objects.boss;
 
 public class GamePanel extends JPanel implements Runnable, KeyListener {
     public static final int WIDTH = 1280;
@@ -27,7 +28,7 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
     private Random random = new Random();
 
     private BufferedImage backgroundImg;
-    private BufferedImage playerImg, bulletImg, enemyImg;
+    private BufferedImage playerImg, bulletImg, enemyImg, bossImg;
 
     private Item player, bullet;
     private int playerScore = 0, playerHealth;
@@ -44,6 +45,12 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
 
     private MusicPlayer musicPlayer, shootSound, hitSound;
     private String enemyFolder = "enemy1";
+
+    private boolean boss_active = false, boss_act = false;
+    private int last_boss = 0;
+    private boss boss;
+    private long boss_spawntime = 0, boss_deathtime = 0, boss_action = 0;
+    private int bossHeath, bossSpeed;
 
     public GamePanel() {
         setPreferredSize(new Dimension(WIDTH, HEIGHT));
@@ -149,9 +156,28 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
     private void update() {
         loadBackgroundImages();
 
-        if (playerScore >= 50) {
+        if (playerScore % 10 == 0 && playerScore > 0 && playerScore != last_boss && !boss_active) {
+            try {
+                boss = new boss(
+                        ImageIO.read(getClass().getResource(ConfigLoader.getString("boss.image"))),
+                        ConfigLoader.getInt("boss.hp"),
+                        ConfigLoader.getInt("boss.damage"),
+                        ConfigLoader.getInt("boss.speed"));
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            bossImg = boss.getImage();
+            bossHeath = boss.getHp();
+            bossSpeed = boss.getSpeed();
+            boss_active = true;
+            last_boss = playerScore;
+            boss_spawntime = System.currentTimeMillis();
+            boss_action = System.currentTimeMillis();
+        }
+
+        if (playerScore >= 10 && !boss_active) {
             enemyFolder = "enemy2";
-        } else if (playerScore >= 25) {
+        } else if (playerScore >= 20 && !boss_active) {
             enemyFolder = "enemy3";
         }
 
@@ -175,10 +201,12 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
         }
 
         // Xuất hiện địch theo thời gian
-        long currentTime = System.currentTimeMillis();
-        if (currentTime - lastEnemySpawnTime >= enemySpawnInterval) {
-            spawnEnemy();
-            lastEnemySpawnTime = currentTime;
+        if (!boss_active) {
+            long currentTime = System.currentTimeMillis();
+            if (currentTime - lastEnemySpawnTime >= enemySpawnInterval) {
+                spawnEnemy();
+                lastEnemySpawnTime = currentTime;
+            }
         }
 
         // Update enemies
@@ -247,13 +275,14 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
             long elapsedTime = now - lastTime;
             lastTime = now;
 
-            update();
-            repaint();
+            update(); // Your game update logic
+            repaint(); // Your game render logic
 
+            // Sleep to limit the game loop to a fixed FPS
             try {
-                long sleepTime = (lastTime - System.nanoTime() + OPTIMAL_TIME) / 1000000;
+                long sleepTime = (lastTime - System.nanoTime() + OPTIMAL_TIME) / 1000000; // Convert to milliseconds
                 if (sleepTime > 0) {
-                    Thread.sleep(sleepTime);
+                    Thread.sleep(sleepTime); // Sleep for the remaining time to maintain target FPS
                 }
             } catch (InterruptedException e) {
                 e.printStackTrace();
