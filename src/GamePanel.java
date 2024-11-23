@@ -23,13 +23,11 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
     private int playerScore = 0, playerHealth;
     private ArrayList<Item> enemies = new ArrayList<>();
     private int enemyLength = 1;
-    private int enemyCount = 0;
     private long startTime;
-    private int enemySpawnFrequency;
 
-    private int move = 0; // 0: no movement, 1: right, -1: left
+    private int move = 0; // 0: đứng yên, 1: phải, -1: trái
     private int moveY = 0;
-    private int shoot = 0; // 0: no shooting, 1: shoot
+    private int shoot = 0; // 0: không bắn, 1: bắn
 
     private boolean paused = false;
     private Thread thread;
@@ -70,7 +68,7 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
     private void loadEnemyImages() {
         long etime = System.currentTimeMillis() - startTime;
         int frameIndex = (int) ((etime / 100) % 10);
-        String enemyImgPath = String.format("/images/enemies1/%s/enemy%d.png",enemyFolder, frameIndex + 1);
+        String enemyImgPath = String.format("/images/enemies1/%s/enemy%d.png", enemyFolder, frameIndex + 1);
         try {
             enemyImg = ImageIO.read(getClass().getResource(enemyImgPath));
         } catch (Exception e) {
@@ -88,9 +86,6 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
             e.printStackTrace();
         }
     }
-
-    // bulletImg = ImageIO.read(getClass().getResource("/images/bullet.png"));
-    // enemyImg = ImageIO.read(getClass().getResource("/images/enemy.png"));
 
     private void initializeObjects() {
         player = new Item();
@@ -117,8 +112,6 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
         bullet = new Item();
         bullet.vy = ConfigLoader.getInt("bullet.velocityY");
 
-        enemySpawnFrequency = ConfigLoader.getInt("enemy.spawnFrequency");
-
         for (int i = 0; i < enemyLength; i++) {
             Item enemy = new Item();
             enemy.x = random.nextInt(WIDTH - TILE);
@@ -128,15 +121,18 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
         }
     }
 
+    private long lastEnemySpawnTime = System.currentTimeMillis(); // Track the last spawn time
+    private int enemySpawnInterval = ConfigLoader.getInt("enemy.spawnInterval") * 1000; // Interval in milliseconds
+
     private void update() {
         loadBackgroundImages();
-        enemyCount++;
 
         if (playerScore >= 50) {
             enemyFolder = "enemy2";
         } else if (playerScore >= 25) {
             enemyFolder = "enemy3";
         }
+
         // Di chuyển ngang
         if (move == 1 && player.x + TILE < WIDTH)
             player.x += player.vx;
@@ -145,7 +141,7 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
 
         // Di chuyển dọc (lên hoặc xuống)
         if (moveY == 1 && player.y + TILE < HEIGHT)
-            player.y += player.vx; // Dùng velocity dọc để điều chỉnh tốc độ lên xuống
+            player.y += player.vx;
         else if (moveY == -1 && player.y > 0)
             player.y -= player.vx;
 
@@ -155,6 +151,14 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
             if (bullet.y < -TILE)
                 shoot = 0;
         }
+
+        // Xuất hiện địch theo thời gian
+        long currentTime = System.currentTimeMillis();
+        if (currentTime - lastEnemySpawnTime >= enemySpawnInterval) {
+            spawnEnemy();
+            lastEnemySpawnTime = currentTime;
+        }
+
         for (Item enemy : enemies) {
             loadEnemyImages();
             enemy.y += enemy.vy;
@@ -183,15 +187,15 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
             gameOver = true;
             musicPlayer.stop();
         }
+    }
 
-        if (enemyCount % enemySpawnFrequency == 0) {
-            enemyLength++;
-            Item newEnemy = new Item();
-            newEnemy.x = random.nextInt(WIDTH - TILE);
-            newEnemy.y = -random.nextInt(TILE);
-            newEnemy.vy = ConfigLoader.getInt("enemy.initialVelocityY");
-            enemies.add(newEnemy);
-        }
+    private void spawnEnemy() {
+        enemyLength++;
+        Item newEnemy = new Item();
+        newEnemy.x = random.nextInt(WIDTH - TILE);
+        newEnemy.y = -random.nextInt(TILE);
+        newEnemy.vy = ConfigLoader.getInt("enemy.initialVelocityY");
+        enemies.add(newEnemy);
     }
 
     private boolean checkCollision(Item a, Item b) {
@@ -245,15 +249,14 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
         g.setColor(Color.WHITE);
         g.setFont(new Font("Arial", Font.PLAIN, 15));
         g.drawString("SCORE  " + playerScore, 5, 15);
-        // Health bar dimensions
+        // Thanh máu
         int healthBarX = 5, healthBarY = 40, healthBarWidth = 150, healthBarHeight = 15;
         int healthFillWidth = (int) ((playerHealth / 100.0) * healthBarWidth);
 
-        // Fill health bar
+        // Hiện thanh máu
         g.setColor(Color.RED);
         g.fillRect(healthBarX + 1, healthBarY + 1, healthFillWidth, healthBarHeight - 1);
 
-        // Add health label
         g.setFont(new Font("Arial", Font.PLAIN, 15));
         g.setColor(Color.WHITE);
         g.drawString("HEALTH", healthBarX, healthBarY - 5);
@@ -300,7 +303,7 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
                 case KeyEvent.VK_W -> moveY = -1; // Di chuyển lên
                 case KeyEvent.VK_S -> moveY = 1; // Di chuyển xuống
                 case KeyEvent.VK_SPACE -> {
-                    if (!paused && shoot == 0) { // Chỉ bắn khi không đang pause
+                    if (!paused && shoot == 0) { // Không bắn khi pause
                         bullet.x = player.x;
                         bullet.y = player.y + 20;
                         shoot = 1;
@@ -309,7 +312,7 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
                     }
                 }
                 case KeyEvent.VK_P -> {
-                    paused = !paused; // Toggle paused state
+                    paused = !paused;
                 }
             }
         }
@@ -317,9 +320,9 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
 
     private void returnToMainMenu() {
         JFrame topFrame = (JFrame) SwingUtilities.getWindowAncestor(this);
-        topFrame.remove(this); // Remove the game panel
-        MainMenu mainMenu = new MainMenu(); // Create a new main menu
-        topFrame.add(mainMenu); // Add it to the frame
+        topFrame.remove(this); // Loại bỏ GamePanel
+        MainMenu mainMenu = new MainMenu(); // Tạo menu mới
+        topFrame.add(mainMenu);
         topFrame.revalidate();
         topFrame.repaint();
     }
