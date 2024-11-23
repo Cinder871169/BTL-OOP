@@ -24,7 +24,7 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
     private Random random = new Random();
 
     private BufferedImage backgroundImg;
-    private BufferedImage playerImg, bulletImg, enemyImg;
+    private BufferedImage playerImg, bulletImg, enemyImg, bossImg;
 
     private Item player, bullet;
     private int playerScore = 0, playerHealth;
