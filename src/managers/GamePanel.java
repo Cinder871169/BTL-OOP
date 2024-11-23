@@ -1,3 +1,5 @@
+package managers;
+
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.image.BufferedImage;
@@ -6,6 +8,10 @@ import java.util.ArrayList;
 import java.util.Random;
 import javax.imageio.ImageIO;
 import javax.swing.*;
+
+import main.MainMenu;
+import objects.Item;
+import objects.Spaceship;
 
 public class GamePanel extends JPanel implements Runnable, KeyListener {
     public static final int WIDTH = 1280;

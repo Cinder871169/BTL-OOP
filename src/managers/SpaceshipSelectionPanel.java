@@ -1,7 +1,12 @@
+package managers;
+
 import java.awt.*;
 import java.io.IOException;
 import javax.imageio.ImageIO;
 import javax.swing.*;
+
+import objects.Spaceship;
+
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
@@ -50,8 +55,7 @@ public class SpaceshipSelectionPanel extends JPanel {
                 ImageIO.read(getClass().getResource(ConfigLoader.getString(spaceshipKey + ".image"))),
                 ConfigLoader.getInt(spaceshipKey + ".hp"),
                 ConfigLoader.getInt(spaceshipKey + ".damage"),
-                ConfigLoader.getInt(spaceshipKey + ".speed")
-        );
+                ConfigLoader.getInt(spaceshipKey + ".speed"));
     }
 
     private JPanel createSpaceshipPanel(int index) {
@@ -60,7 +64,8 @@ public class SpaceshipSelectionPanel extends JPanel {
         panel.setBorder(BorderFactory.createLineBorder(Color.GRAY));
 
         // Resize spaceship image
-        Image scaledImage = spaceships[index].getImage().getScaledInstance(SPACESHIP_IMAGE_WIDTH, SPACESHIP_IMAGE_HEIGHT, Image.SCALE_SMOOTH);
+        Image scaledImage = spaceships[index].getImage().getScaledInstance(SPACESHIP_IMAGE_WIDTH,
+                SPACESHIP_IMAGE_HEIGHT, Image.SCALE_SMOOTH);
 
         JLabel imageLabel = new JLabel(new ImageIcon(scaledImage));
         imageLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -117,23 +122,25 @@ public class SpaceshipSelectionPanel extends JPanel {
 
         selectedSpaceship = spaceships[index];
         selectedIndex = index;
-    
+
         // Cập nhật màu nền và hiệu ứng hình ảnh cho panel tàu vũ trụ
         for (int i = 0; i < spaceshipPanels.length; i++) {
             if (i == index) {
                 spaceshipPanels[i].setBackground(SELECTED_COLOR); // Đổi màu nền khi được chọn
-                spaceshipPanels[i].setBorder(BorderFactory.createLineBorder(Color.YELLOW, 2)); // Thêm viền vàng cho panel được chọn
+                spaceshipPanels[i].setBorder(BorderFactory.createLineBorder(Color.YELLOW, 2)); // Thêm viền vàng cho
+                                                                                               // panel được chọn
             } else {
                 spaceshipPanels[i].setBackground(null); // Reset màu nền
                 spaceshipPanels[i].setBorder(null); // Loại bỏ viền khi không chọn
             }
             spaceshipPanels[i].repaint(); // Vẽ lại panel để hiển thị thay đổi
         }
-    
+
         // Hiển thị tàu vũ trụ đã được chọn trong console
         System.out.println("Spaceship " + (index + 1) + " selected!");
 
-        JOptionPane.showMessageDialog(this, "You have selected Spaceship " + (index + 1), "Selection Complete", JOptionPane.INFORMATION_MESSAGE);
+        JOptionPane.showMessageDialog(this, "You have selected Spaceship " + (index + 1), "Selection Complete",
+                JOptionPane.INFORMATION_MESSAGE);
     }
 
     public Spaceship getSelectedSpaceship() {

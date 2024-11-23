@@ -1,3 +1,5 @@
+package main;
+
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -5,6 +7,11 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.imageio.ImageIO;
 import javax.swing.*;
+
+import managers.GamePanel;
+import managers.MusicPlayer;
+import managers.SpaceshipSelectionPanel;
+import objects.Spaceship;
 
 public class MainMenu extends JPanel {
     private JButton startButton, exitButton, spaceshipSelectButton;

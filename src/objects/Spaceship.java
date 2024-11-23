@@ -1,3 +1,5 @@
+package objects;
+
 import java.awt.image.BufferedImage;
 
 public class Spaceship {
