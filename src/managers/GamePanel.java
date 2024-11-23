@@ -166,18 +166,23 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
             lastEnemySpawnTime = currentTime;
         }
 
+        // Update enemies
+        ArrayList<Item> enemiesToRemove = new ArrayList<>();
         for (Item enemy : enemies) {
             loadEnemyImages();
             enemy.y += enemy.vy;
 
+            // Check collision with bullet
             if (checkCollision(bullet, enemy)) {
                 resetEnemy(enemy);
                 shoot = 0;
                 playerScore += ConfigLoader.getInt("enemy.scoreValue");
                 hitSound = new MusicPlayer("/sound/hit.wav");
                 hitSound.play();
+                enemiesToRemove.add(enemy); // Mark enemy for removal
             }
 
+            // Check collision with player
             if (checkCollision(player, enemy)) {
                 int impact = random.nextInt(ConfigLoader.getInt("enemy.healthImpactMax") -
                         ConfigLoader.getInt("enemy.healthImpactMin")) +
@@ -186,8 +191,12 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
                 hitSound.play();
                 playerHealth -= impact;
                 resetEnemy(enemy);
+                enemiesToRemove.add(enemy); // Mark enemy for removal
             }
         }
+
+        // Remove the marked enemies
+        enemies.removeAll(enemiesToRemove);
 
         if (playerHealth <= 0) {
             playerHealth = 0;
