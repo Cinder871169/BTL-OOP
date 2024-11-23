@@ -65,9 +65,9 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
         int frameIndex = (int) ((etime / 100) % 10);
         String backgroundImgPath = String.format("/images/background/background%d.png", frameIndex + 1);
         try {
-
-            backgroundImg = ImageIO.read(getClass().getResource(backgroundImgPath));
-        } catch (Exception e) {
+            backgroundImg = loadImage(backgroundImgPath);
+        } catch (IOException e) {
+            System.err.println("Error loading background image: " + backgroundImgPath);
             e.printStackTrace();
         }
     }
@@ -77,8 +77,9 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
         int frameIndex = (int) ((etime / 100) % 10);
         String enemyImgPath = String.format("/images/enemies1/%s/enemy%d.png", enemyFolder, frameIndex + 1);
         try {
-            enemyImg = ImageIO.read(getClass().getResource(enemyImgPath));
-        } catch (Exception e) {
+            enemyImg = loadImage(enemyImgPath);
+        } catch (IOException e) {
+            System.err.println("Error loading enemy image: " + enemyImgPath);
             e.printStackTrace();
         }
     }
@@ -88,10 +89,20 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
         int frameIndex = (int) ((etime / 100) % 4);
         String pbulletImgPath = String.format("/images/PlayerBullet/bullet%d.png", frameIndex + 1);
         try {
-            bulletImg = ImageIO.read(getClass().getResource(pbulletImgPath));
-        } catch (Exception e) {
+            bulletImg = loadImage(pbulletImgPath);
+        } catch (IOException e) {
+            System.err.println("Error loading player bullet image: " + pbulletImgPath);
             e.printStackTrace();
         }
+    }
+
+    // Add
+    private BufferedImage loadImage(String imagePath) throws IOException {
+        BufferedImage img = ImageIO.read(getClass().getResource(imagePath));
+        if (img == null) {
+            throw new IOException("Image not found: " + imagePath);
+        }
+        return img;
     }
 
     private void initializeObjects() {
