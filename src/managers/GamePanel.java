@@ -4,15 +4,13 @@ import java.awt.*;
 import java.awt.event.*;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Random;
+import java.util.*;
 import javax.imageio.ImageIO;
 import javax.swing.*;
 
 import main.MainMenu;
 import objects.Item;
 import objects.Spaceship;
-import objects.boss;
 
 public class GamePanel extends JPanel implements Runnable, KeyListener {
     public static final int WIDTH = 1280;
@@ -20,11 +18,16 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
     public static final int TILE = 64;
     public static Spaceship selectedSpaceship;
 
+    private boolean running = true;
+    private final int FPS = 60; // Target frame rate
+    private final long OPTIMAL_TIME = 1000000000 / FPS;
+    private long lastTime = System.nanoTime();
+
     private boolean gameOver = false;
     private Random random = new Random();
 
     private BufferedImage backgroundImg;
-    private BufferedImage playerImg, bulletImg, enemyImg, bossImg;
+    private BufferedImage playerImg, bulletImg, enemyImg;
 
     private Item player, bullet;
     private int playerScore = 0, playerHealth;
@@ -41,12 +44,6 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
 
     private MusicPlayer musicPlayer, shootSound, hitSound;
     private String enemyFolder = "enemy1";
-
-    private boolean boss_active = false, boss_act = false;
-    private int last_boss =  0;
-    private boss boss;
-    private long boss_spawntime = 0, boss_deathtime = 0, boss_action = 0;
-    private int bossHeath, bossSpeed;
 
     public GamePanel() {
         setPreferredSize(new Dimension(WIDTH, HEIGHT));
@@ -152,28 +149,9 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
     private void update() {
         loadBackgroundImages();
 
-        if (playerScore %10 == 0 && playerScore >0 && playerScore != last_boss && !boss_active){
-            try {
-                boss = new boss(
-                ImageIO.read(getClass().getResource(ConfigLoader.getString("boss.image"))),
-                ConfigLoader.getInt("boss.hp"),
-                ConfigLoader.getInt("boss.damage"),
-                ConfigLoader.getInt("boss.speed"));
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-            bossImg = boss.getImage();
-            bossHeath = boss.getHp();
-            bossSpeed = boss.getSpeed();
-            boss_active = true;
-            last_boss = playerScore;
-            boss_spawntime = System.currentTimeMillis();
-            boss_action = System.currentTimeMillis();
-        }  
-
-        if (playerScore >= 10 && !boss_active) {
+        if (playerScore >= 50) {
             enemyFolder = "enemy2";
-        } else if (playerScore >= 20 && !boss_active) {
+        } else if (playerScore >= 25) {
             enemyFolder = "enemy3";
         }
 
@@ -197,17 +175,16 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
         }
 
         // Xuất hiện địch theo thời gian
-        if(!boss_active){
-            long currentTime = System.currentTimeMillis();
-            if (currentTime - lastEnemySpawnTime >= enemySpawnInterval) {
-                spawnEnemy();
-                lastEnemySpawnTime = currentTime;
-            }
+        long currentTime = System.currentTimeMillis();
+        if (currentTime - lastEnemySpawnTime >= enemySpawnInterval) {
+            spawnEnemy();
+            lastEnemySpawnTime = currentTime;
         }
 
         // Update enemies
-        ArrayList<Item> enemiesToRemove = new ArrayList<>();
-        for (Item enemy : enemies) {
+        Iterator<Item> iterator = enemies.iterator();
+        while (iterator.hasNext()) {
+            Item enemy = iterator.next();
             loadEnemyImages();
             enemy.y += enemy.vy;
 
@@ -218,7 +195,7 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
                 playerScore += ConfigLoader.getInt("enemy.scoreValue");
                 hitSound = new MusicPlayer("/sound/hit.wav");
                 hitSound.play();
-                enemiesToRemove.add(enemy); // Mark enemy for removal
+                iterator.remove(); // Remove the enemy
             }
 
             // Check collision with player
@@ -230,12 +207,9 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
                 hitSound.play();
                 playerHealth -= impact;
                 resetEnemy(enemy);
-                enemiesToRemove.add(enemy); // Mark enemy for removal
+                iterator.remove(); // Remove the enemy
             }
         }
-
-        // Remove the marked enemies
-        enemies.removeAll(enemiesToRemove);
 
         if (playerHealth <= 0) {
             playerHealth = 0;
@@ -268,21 +242,21 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
 
     @Override
     public void run() {
-        long lastTime = System.nanoTime();
-        double delta = 0.0;
-        double tickRate = 60.0;
+        while (running) {
+            long now = System.nanoTime();
+            long elapsedTime = now - lastTime;
+            lastTime = now;
 
-        while (thread != null) {
-            long currentTime = System.nanoTime();
-            delta += (currentTime - lastTime) / (1e9 / tickRate);
-            lastTime = currentTime;
+            update();
+            repaint();
 
-            if (delta >= 1) {
-                if (!gameOver && !paused) {
-                    update();
+            try {
+                long sleepTime = (lastTime - System.nanoTime() + OPTIMAL_TIME) / 1000000;
+                if (sleepTime > 0) {
+                    Thread.sleep(sleepTime);
                 }
-                repaint();
-                delta--;
+            } catch (InterruptedException e) {
+                e.printStackTrace();
             }
         }
     }
@@ -298,7 +272,8 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
         if (!gameOver)
             g.drawImage(playerImg, player.x, player.y, TILE, TILE, null);
 
-        for (Item enemy : enemies) {
+        ArrayList<Item> enemiesCopy = new ArrayList<>(enemies);
+        for (Item enemy : enemiesCopy) {
             g.drawImage(enemyImg, enemy.x, enemy.y, TILE, TILE, null);
         }
         g.setColor(Color.WHITE);
