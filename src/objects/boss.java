@@ -7,12 +7,20 @@ public class boss {
     private int hp;
     private int damage;
     private int speed;
+    public int x;
+    public int y;
+    private int width;
+    private int height;
 
-    public boss(BufferedImage image, int hp, int damage, int speed){
+    public boss(BufferedImage image, int hp, int damage, int speed, int x, int y, int width, int height){
         this.image = image;
         this.hp = hp;
         this.damage = damage;
         this.speed = speed;
+        this.x = x;
+        this.y=y;
+        this.height=height;
+        this.width = width;
     }
 
     public BufferedImage getImage() {
@@ -29,6 +37,22 @@ public class boss {
 
     public int getSpeed() {
         return speed;
+    }
+
+    public int getX(){
+        return x;
+    }
+
+    public int getY(){
+        return y;
+    }
+
+    public int getWidth(){
+        return width;
+    }
+
+    public int getHeight(){
+        return height;
     }
 }
 
