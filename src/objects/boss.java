@@ -3,7 +3,6 @@ package objects;
 import java.awt.image.BufferedImage;
 
 public class boss {
-    private BufferedImage image;
     private int hp;
     private int damage;
     private int speed;
@@ -12,8 +11,7 @@ public class boss {
     private int width;
     private int height;
 
-    public boss(BufferedImage image, int hp, int damage, int speed, int x, int y, int width, int height){
-        this.image = image;
+    public boss(int hp, int damage, int speed, int x, int y, int width, int height){
         this.hp = hp;
         this.damage = damage;
         this.speed = speed;
@@ -21,10 +19,6 @@ public class boss {
         this.y=y;
         this.height=height;
         this.width = width;
-    }
-
-    public BufferedImage getImage() {
-        return image;
     }
 
     public int getHp() {
