@@ -30,7 +30,7 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
     private BufferedImage playerImg, bulletImg, enemyImg, bossImg;
 
     private Item player, bullet;
-    private int playerScore = 0, playerHealth;
+    private int playerScore = 0, playerHealth, playerDamage;
     private ArrayList<Item> enemies = new ArrayList<>();
     private int enemyLength = 1;
     private long startTime;
@@ -45,11 +45,13 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
     private MusicPlayer musicPlayer, shootSound, hitSound;
     private String enemyFolder = "enemy1";
 
+    //boss
     private boolean boss_active = false, boss_act = false;
     private int last_boss =  0;
     private boss boss;
-    private long boss_spawntime = 0, boss_deathtime = 0, boss_action = 0;
-    private int bossHeath, bossSpeed,bossWidth,bossHeight;
+    private long boss_spawntime = 0, boss_deathtime = 0, boss_action = 0, bossLastShoot=System.currentTimeMillis();
+    private int bossHeath, bossSpeed,bossWidth,bossHeight, bossDamage, bossDirection=1;
+    private Item bossBullet;
 
     public GamePanel() {
         setPreferredSize(new Dimension(WIDTH, HEIGHT));
@@ -106,6 +108,18 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
         }
     }
 
+    private void loadBossImages(){
+        long etime = System.currentTimeMillis() - startTime;
+        int frameIndex = (int) ((etime / 100) % 12);
+        String bossImgPath = String.format("/images/bosses/boss1/idle%d.png", frameIndex + 1);
+        try {
+            bossImg = loadImage(bossImgPath);
+        } catch (IOException e) {
+            System.err.println("Error loading boss image: " + bossImgPath);
+            e.printStackTrace();
+        }
+    }
+
     // Add
     private BufferedImage loadImage(String imagePath) throws IOException {
         BufferedImage img = ImageIO.read(getClass().getResource(imagePath));
@@ -136,6 +150,7 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
         playerImg = selectedSpaceship.getImage();
         playerHealth = selectedSpaceship.getHp();
         player.vx = selectedSpaceship.getSpeed();
+        playerDamage = selectedSpaceship.getDamage();
 
         bullet = new Item();
         bullet.vy = ConfigLoader.getInt("bullet.velocityY");
@@ -154,41 +169,34 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
 
     private void update() {
         loadBackgroundImages();
-
+        loadBossImages();
         if (playerScore %10 == 0 && playerScore >0 && playerScore != last_boss && !boss_active){
-            try {
-                boss = new boss(
-                ImageIO.read(getClass().getResource(ConfigLoader.getString("boss.image"))),
-                ConfigLoader.getInt("boss.hp"),
-                ConfigLoader.getInt("boss.damage"),
-                ConfigLoader.getInt("boss.speed"),
-                ConfigLoader.getInt("boss.initialX"),
-                ConfigLoader.getInt("boss.initialY"),
-                ConfigLoader.getInt("boss.width"),
-                ConfigLoader.getInt("boss.height"));
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-            boss_active = true;
-            last_boss = playerScore;
-            boss_spawntime = System.currentTimeMillis();
-            boss_action = System.currentTimeMillis();
-        }
-        if(boss!=null){
-            bossImg = boss.getImage();
-            bossHeath = boss.getHp();
-            bossSpeed = boss.getSpeed();
-            bossWidth = boss.getWidth();
-            bossHeight = boss.getHeight();
+            spawnBoss();
         }
 
+        //delay for boss spawn and deadth
         if (boss_active){
-            if (System.currentTimeMillis()-boss_spawntime >= 5000 && boss_spawntime!=0){
-                int target_y = -bossWidth/3;
+            if (System.currentTimeMillis()-boss_spawntime >= 4000 && boss_spawntime!=0){
+                int target_y = 0;
                 if (boss.y <target_y){
                     boss.y+= bossSpeed;
                 }
             }
+            else if(System.currentTimeMillis()-boss_deathtime>=4000 && boss_deathtime!=0){
+                boss_deathtime=0;
+                boss_active = false;
+            }
+        }
+
+        //boss action
+        if(boss!=null){
+            //get random action
+            if(!boss_act && System.currentTimeMillis()-boss_action>=10000){
+                boss_action = System.currentTimeMillis() - (10000+random.nextLong(1));
+                boss_act = true;
+            }
+            //action 1
+            bossAttack1();
         }
 
         if (playerScore >= 10 && !boss_active) {
@@ -255,10 +263,85 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
             }
         }
 
+        //check boss collision
+        if(boss!=null){
+            if(checkBossCollision(bullet, boss) && shoot==1){
+                shoot=0;
+                bossHeath -= playerDamage;
+            }
+            if(checkBossCollision(player, boss)){
+                playerHealth -= bossDamage;
+            }
+            if(bossHeath<=0){
+                playerScore += ConfigLoader.getInt("enemy.scoreValue");
+                boss = null;
+                boss_spawntime =0;
+                boss_deathtime = System.currentTimeMillis();
+            }
+        }
+
         if (playerHealth <= 0) {
             playerHealth = 0;
             gameOver = true;
             musicPlayer.stop();
+        }
+    }
+
+    private void spawnBoss(){
+        try {
+            boss = new boss(
+            ConfigLoader.getInt("boss.hp"),
+            ConfigLoader.getInt("boss.damage"),
+            ConfigLoader.getInt("boss.speed"),
+            ConfigLoader.getInt("boss.initialX"),
+            ConfigLoader.getInt("boss.initialY"),
+            ConfigLoader.getInt("boss.width"),
+            ConfigLoader.getInt("boss.height"));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        boss_active = true;
+        last_boss = playerScore;
+        boss_spawntime = System.currentTimeMillis();
+        boss_action = System.currentTimeMillis();
+
+        if(boss!=null){
+            bossHeath = boss.getHp();
+            bossSpeed = boss.getSpeed();
+            bossWidth = boss.getWidth();
+            bossHeight = boss.getHeight();
+            bossDamage = boss.getDamage();
+        }
+    }
+
+    private void bossAttack1(){
+        if(System.currentTimeMillis() - boss_action >=10000 && System.currentTimeMillis() - boss_action <=25000){
+            if(boss.x<100){
+                bossDirection = 1;
+            }
+            else if(boss.x >= WIDTH - bossWidth-100){
+                bossDirection = -1;
+            }
+            boss.x += bossSpeed*bossDirection;
+        }
+
+        //reposition
+        if(System.currentTimeMillis() - boss_action >25000 && System.currentTimeMillis() - boss_action <=28000){
+            if(boss.x<0){
+                bossDirection = 1;
+            }
+            else if(boss.x >= WIDTH - bossWidth){
+                bossDirection = -1;
+            }
+            if(boss.x != ConfigLoader.getInt("boss.initialX")){
+                boss.x += bossSpeed*bossDirection;
+            }
+        }
+        
+        //delay after action
+        if(System.currentTimeMillis() - boss_action >28000 && System.currentTimeMillis() - boss_action <=28500){
+            boss_act = false;
+            boss_action = System.currentTimeMillis() - 8000;
         }
     }
 
@@ -275,6 +358,12 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
         Rectangle aBounds = new Rectangle(a.x, a.y, TILE, TILE);
         Rectangle bBounds = new Rectangle(b.x, b.y, TILE, TILE);
         return aBounds.intersects(bBounds);
+    }
+
+    private boolean checkBossCollision(Item a, boss b) {
+        Rectangle aBounds = new Rectangle(a.x, a.y, TILE, TILE);
+        Rectangle bossBounds = new Rectangle(b.x, b.y, bossWidth , bossHeight);
+        return aBounds.intersects(bossBounds);
     }
 
     private void resetEnemy(Item enemy) {
@@ -318,7 +407,7 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
         for (Item enemy : enemiesCopy) {
             g.drawImage(enemyImg, enemy.x, enemy.y, TILE, TILE, null);
         }
-        if(boss!=null && System.currentTimeMillis()-boss_spawntime >= 5000 && boss_spawntime!=0){
+        if(boss!=null && System.currentTimeMillis()-boss_spawntime >= 4000 && boss_spawntime!=0){
             g.drawImage(bossImg, boss.x, boss.y, bossWidth, bossHeight, null);
         }
         g.setColor(Color.WHITE);
