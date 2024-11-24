@@ -7,7 +7,6 @@ import java.io.IOException;
 import java.util.*;
 import javax.imageio.ImageIO;
 import javax.swing.*;
-
 import main.MainMenu;
 import objects.Item;
 import objects.Spaceship;
@@ -47,10 +46,10 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
     private String enemyFolder = "enemy1";
 
     private boolean boss_active = false, boss_act = false;
-    private int last_boss = 0;
+    private int last_boss =  0;
     private boss boss;
     private long boss_spawntime = 0, boss_deathtime = 0, boss_action = 0;
-    private int bossHeath, bossSpeed;
+    private int bossHeath, bossSpeed,bossWidth,bossHeight;
 
     public GamePanel() {
         setPreferredSize(new Dimension(WIDTH, HEIGHT));
@@ -156,23 +155,40 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
     private void update() {
         loadBackgroundImages();
 
-        if (playerScore % 10 == 0 && playerScore > 0 && playerScore != last_boss && !boss_active) {
+        if (playerScore %10 == 0 && playerScore >0 && playerScore != last_boss && !boss_active){
             try {
                 boss = new boss(
-                        ImageIO.read(getClass().getResource(ConfigLoader.getString("boss.image"))),
-                        ConfigLoader.getInt("boss.hp"),
-                        ConfigLoader.getInt("boss.damage"),
-                        ConfigLoader.getInt("boss.speed"));
+                ImageIO.read(getClass().getResource(ConfigLoader.getString("boss.image"))),
+                ConfigLoader.getInt("boss.hp"),
+                ConfigLoader.getInt("boss.damage"),
+                ConfigLoader.getInt("boss.speed"),
+                ConfigLoader.getInt("boss.initialX"),
+                ConfigLoader.getInt("boss.initialY"),
+                ConfigLoader.getInt("boss.width"),
+                ConfigLoader.getInt("boss.height"));
             } catch (Exception e) {
                 e.printStackTrace();
             }
-            bossImg = boss.getImage();
-            bossHeath = boss.getHp();
-            bossSpeed = boss.getSpeed();
             boss_active = true;
             last_boss = playerScore;
             boss_spawntime = System.currentTimeMillis();
             boss_action = System.currentTimeMillis();
+        }
+        if(boss!=null){
+            bossImg = boss.getImage();
+            bossHeath = boss.getHp();
+            bossSpeed = boss.getSpeed();
+            bossWidth = boss.getWidth();
+            bossHeight = boss.getHeight();
+        }
+
+        if (boss_active){
+            if (System.currentTimeMillis()-boss_spawntime >= 5000 && boss_spawntime!=0){
+                int target_y = -bossWidth/3;
+                if (boss.y <target_y){
+                    boss.y+= bossSpeed;
+                }
+            }
         }
 
         if (playerScore >= 10 && !boss_active) {
@@ -201,7 +217,7 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
         }
 
         // Xuất hiện địch theo thời gian
-        if (!boss_active) {
+        if(!boss_active){
             long currentTime = System.currentTimeMillis();
             if (currentTime - lastEnemySpawnTime >= enemySpawnInterval) {
                 spawnEnemy();
@@ -274,15 +290,12 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
             long now = System.nanoTime();
             long elapsedTime = now - lastTime;
             lastTime = now;
-
-            update(); // Your game update logic
-            repaint(); // Your game render logic
-
-            // Sleep to limit the game loop to a fixed FPS
+            update();
+            repaint();
             try {
-                long sleepTime = (lastTime - System.nanoTime() + OPTIMAL_TIME) / 1000000; // Convert to milliseconds
+                long sleepTime = (lastTime - System.nanoTime() + OPTIMAL_TIME) / 1000000;
                 if (sleepTime > 0) {
-                    Thread.sleep(sleepTime); // Sleep for the remaining time to maintain target FPS
+                    Thread.sleep(sleepTime);
                 }
             } catch (InterruptedException e) {
                 e.printStackTrace();
@@ -296,7 +309,7 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
         g.drawImage(backgroundImg, 0, 0, null);
 
         if (shoot == 1) {
-            g.drawImage(bulletImg, bullet.x + 23, bullet.y, 16, 64, null);
+            g.drawImage(bulletImg, bullet.x + 19, bullet.y, 25, 60, null);
         }
         if (!gameOver)
             g.drawImage(playerImg, player.x, player.y, TILE, TILE, null);
@@ -304,6 +317,9 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
         ArrayList<Item> enemiesCopy = new ArrayList<>(enemies);
         for (Item enemy : enemiesCopy) {
             g.drawImage(enemyImg, enemy.x, enemy.y, TILE, TILE, null);
+        }
+        if(boss!=null && System.currentTimeMillis()-boss_spawntime >= 5000 && boss_spawntime!=0){
+            g.drawImage(bossImg, boss.x, boss.y, bossWidth, bossHeight, null);
         }
         g.setColor(Color.WHITE);
         g.setFont(new Font("Arial", Font.PLAIN, 15));
