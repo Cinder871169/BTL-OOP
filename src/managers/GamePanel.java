@@ -27,7 +27,7 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
     private Random random = new Random();
 
     private BufferedImage backgroundImg;
-    private BufferedImage playerImg, bulletImg, enemyImg, bossImg,bossBulletImg;
+    private BufferedImage playerImg, bulletImg, enemyImg, bossImg,bossBulletImg,bossBeamImg;
 
     private Item player, bullet;
     private int playerScore = 0, playerHealth, playerDamage;
@@ -52,6 +52,10 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
     private long boss_spawntime = 0, boss_deathtime = 0, boss_action = 0, bossLastShoot=System.currentTimeMillis();
     private int bossHeath, bossSpeed,bossWidth,bossHeight, bossDamage, bossDirection=1;
     private ArrayList<Item> bossBullets = new ArrayList<>();
+    private boolean bossCharge=false, bossBeam=false;
+    private long bossChargeTime=0,bossBeamtime=0;
+    private int target_x=0;
+    private Item beam;
 
     public GamePanel() {
         setPreferredSize(new Dimension(WIDTH, HEIGHT));
@@ -132,6 +136,18 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
         }
     }
 
+    private void loadBossBeamImages(){
+        long etime = System.currentTimeMillis() - startTime;
+        int frameIndex = (int) ((etime / 100) % 4);
+        String bossBeamImgPath = String.format("/images/BossBullet/laser1/laser%d.png", frameIndex + 1);
+        try {
+            bossBeamImg = loadImage(bossBeamImgPath);
+        } catch (IOException e) {
+            System.err.println("Error loading boss image: " + bossBeamImgPath);
+            e.printStackTrace();
+        }
+    }
+
     // Add
     private BufferedImage loadImage(String imagePath) throws IOException {
         BufferedImage img = ImageIO.read(getClass().getResource(imagePath));
@@ -182,7 +198,7 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
     private void update() {
         loadBackgroundImages();
         loadBossImages();
-        if (playerScore %10 == 0 && playerScore >0 && playerScore != last_boss && !boss_active){
+        if (playerScore %5 == 0 && playerScore >0 && playerScore != last_boss && !boss_active){
             spawnBoss();
         }
 
@@ -204,16 +220,19 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
         if(boss!=null){
             //get random action
             if(!boss_act && System.currentTimeMillis()-boss_action>=10000){
-                boss_action = System.currentTimeMillis() - (10000+random.nextLong(1));
+                int[] actions = {10000,31000};
+                int randomAction = random.nextInt(actions.length);
+                boss_action = System.currentTimeMillis() - actions[randomAction];
                 boss_act = true;
             }
-            //action 1
+            //action
             bossAttack1();
+            bossAttack2();
         }
 
-        if (playerScore >= 10 && !boss_active) {
+        if (playerScore >= 5 && playerScore < 10 && !boss_active) {
             enemyFolder = "enemy2";
-        } else if (playerScore >= 20 && !boss_active) {
+        } else if (playerScore >= 11 && !boss_active) {
             enemyFolder = "enemy3";
         }
 
@@ -287,11 +306,16 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
                 loadBossBulletImages();
                 bossBullet.y += bullet.vy/5;
                 if(checkBossBulletCollision(player, bossBullet)){
-                    playerHealth -= bossDamage*50;
+                    playerHealth -= bossDamage*40;
                     bossIterator.remove();
                 }
                 if(bossBullet.y > HEIGHT){
                     bossIterator.remove();
+                }
+            }
+            if(beam!=null){
+                if(checkBossBeamCollision(player, beam)){
+                    playerHealth -= bossDamage*2;
                 }
             }
             if(checkBossCollision(bullet, boss) && shoot==1){
@@ -299,7 +323,7 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
                 bossHeath -= playerDamage;
             }
             if(checkBossCollision(player, boss)){
-                playerHealth -= bossDamage;
+                playerHealth -= bossDamage*2;
             }
             if(bossHeath<=0){
                 playerScore += ConfigLoader.getInt("enemy.scoreValue");
@@ -344,16 +368,16 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
     }
 
     private void bossAttack1(){
-        if(System.currentTimeMillis() - boss_action >=10000 && System.currentTimeMillis() - boss_action <=23000){
-            if(boss.x<100){
+        if(System.currentTimeMillis() - boss_action >=10000 && System.currentTimeMillis() - boss_action <=27000){
+            if(boss.x<0){
                 bossDirection = 1;
             }
-            else if(boss.x >= WIDTH - bossWidth-100){
+            else if(boss.x >= WIDTH - bossWidth){
                 bossDirection = -1;
             }
             boss.x += bossSpeed*bossDirection;
 
-            if(System.currentTimeMillis()-bossLastShoot > 3000){
+            if(System.currentTimeMillis()-bossLastShoot > 2500){
                 Item bossBullet = new Item();
                 bossBullet.x = boss.x+(bossWidth/2-85);
                 bossBullet.y = boss.y + bossHeight-100;
@@ -363,7 +387,7 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
         }
 
         //reposition
-        if(System.currentTimeMillis() - boss_action >23000 && System.currentTimeMillis() - boss_action <=25000){
+        if(System.currentTimeMillis() - boss_action >27000 && System.currentTimeMillis() - boss_action <=30000){
             if(boss.x<0){
                 bossDirection = 1;
             }
@@ -376,7 +400,58 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
         }
         
         //delay after action
-        if(System.currentTimeMillis() - boss_action >25000 && System.currentTimeMillis() - boss_action <=25500){
+        if(System.currentTimeMillis() - boss_action >30000 && System.currentTimeMillis() - boss_action <=30500){
+            boss_act = false;
+            boss_action = System.currentTimeMillis() - 8000;
+        }
+    }
+
+    private void bossAttack2(){
+        if(System.currentTimeMillis() - boss_action >=31000 && System.currentTimeMillis() - boss_action <=43000){
+            if(!bossCharge && !bossBeam && System.currentTimeMillis()-bossBeamtime>=4000){
+                target_x = random.nextInt(WIDTH - bossWidth);
+                bossChargeTime=System.currentTimeMillis();
+                bossCharge=true;
+            }
+            if(bossCharge){
+                if(boss.x>target_x+10){
+                    boss.x -= bossSpeed*8;
+                }
+                if(boss.x < target_x-10){
+                    boss.x+= bossSpeed*8;
+                }
+                if (System.currentTimeMillis() - bossChargeTime >= 2000){
+                    bossBeam=true;
+                    bossBeamtime=System.currentTimeMillis();
+                    bossCharge=false;
+                }
+            }
+            if(bossBeam){
+                loadBossBeamImages();
+                beam = new Item();
+                beam.x = boss.x+(bossWidth/2-80);
+                beam.y = boss.y + bossHeight-20;
+                if(System.currentTimeMillis()-bossBeamtime>=2000){
+                    bossBeam=false;
+                    beam=null;
+                }
+            }
+        }
+        //reposition
+        if(System.currentTimeMillis() - boss_action >43000 && System.currentTimeMillis() - boss_action <=48000){
+            if(boss.x<0){
+                bossDirection = 1;
+            }
+            else if(boss.x >= WIDTH - bossWidth){
+                bossDirection = -1;
+            }
+            if(boss.x != ConfigLoader.getInt("boss.initialX")){
+                boss.x += bossSpeed*bossDirection;
+            }
+        }
+        
+        //delay after action
+        if(System.currentTimeMillis() - boss_action >48500 && System.currentTimeMillis() - boss_action <49000){
             boss_act = false;
             boss_action = System.currentTimeMillis() - 8000;
         }
@@ -406,6 +481,12 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
     private boolean checkBossBulletCollision(Item a, Item b) {
         Rectangle aBounds = new Rectangle(a.x, a.y, TILE, TILE);
         Rectangle bossBounds = new Rectangle(b.x, b.y, 170 , 90);
+        return aBounds.intersects(bossBounds);
+    }
+
+    private boolean checkBossBeamCollision(Item a, Item b) {
+        Rectangle aBounds = new Rectangle(a.x, a.y, TILE, TILE);
+        Rectangle bossBounds = new Rectangle(b.x, b.y, 160 , 380);
         return aBounds.intersects(bossBounds);
     }
 
@@ -456,6 +537,9 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
         }
         if(boss!=null && System.currentTimeMillis()-boss_spawntime >= 4000 && boss_spawntime!=0){
             g.drawImage(bossImg, boss.x, boss.y, bossWidth, bossHeight, null);
+        }
+        if(bossBeam && boss!=null){
+            g.drawImage(bossBeamImg, beam.x, beam.y, 160,380,null);
         }
         g.setColor(Color.WHITE);
         g.setFont(new Font("Arial", Font.PLAIN, 15));
