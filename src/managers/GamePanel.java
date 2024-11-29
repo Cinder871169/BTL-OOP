@@ -205,10 +205,10 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
         loadBackgroundImages();
         loadBossImages();
         if (playerScore %10 == 0 && playerScore >0 && playerScore != last_boss && !boss_active){
-            spawnBoss();
+            spawnBoss(); //spawn boss sau mỗi 10 điểm
         }
 
-        //delay for boss spawn and deadth
+        //delay trước khi spawn boss
         if (boss_active){
             if (System.currentTimeMillis()-boss_spawntime >= 4000 && boss_spawntime!=0){
                 int target_y = 0;
@@ -216,34 +216,37 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
                     boss.y+= bossSpeed;
                 }
             }
+            //delay sau khi boss chết
             if(System.currentTimeMillis()-boss_deathtime>=4000 && boss_deathtime!=0){
                 boss_deathtime=0;
                 boss_active = false;
             }
+            //check xem boss đã chết hiện tại đã là boss cuối chưa
             if(System.currentTimeMillis()-boss_deathtime>=3000 && boss_deathtime!=0 && bossFolder=="boss3"){
                 gameWin = true;
             }
         }
 
-        //boss action
+        //hoạt động của boss
         if(boss!=null){
-            //get random action
+            //random hành động
             if(!boss_act && System.currentTimeMillis()-boss_action>=10000){
                 int[] actions = {10000,27000};
                 int randomAction = random.nextInt(actions.length);
-                boss_action = System.currentTimeMillis() - actions[randomAction];
+                boss_action = System.currentTimeMillis() - actions[randomAction];//chỉnh thời gian boss_action về khoảng attack1 hoặc attack2
                 boss_act = true;
             }
-            //action
+            //tùy thuộc vào biến boss_action thuộc khoảng thời gian nào để thực hiện atk1 hoặc atk2
             bossAttack1();
             bossAttack2();
         }
-
+        //thay đổi enemy sau mỗi boss
         if (playerScore >= 11 && playerScore < 20 && !boss_active) {
             enemyFolder = "enemy2";
         } else if (playerScore >= 21 && !boss_active) {
             enemyFolder = "enemy3";
         }
+        //thay đổi boss và skill
         if (playerScore ==20){
             bossFolder="boss2";
             beamFolder="laser2";
@@ -289,7 +292,7 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
             loadEnemyImages();
             enemy.y += enemy.vy;
 
-            // Check collision with bullet
+            // va chạm đạn người chơi với địch
             if (checkCollision(bullet, enemy)) {
                 resetEnemy(enemy);
                 shoot = 0;
@@ -299,7 +302,7 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
                 iterator.remove(); // Remove the enemy
             }
 
-            // Check collision with player
+            // va chạm địch với người chơi
             if (checkCollision(player, enemy)) {
                 int impact = random.nextInt(ConfigLoader.getInt("enemy.healthImpactMax") -
                         ConfigLoader.getInt("enemy.healthImpactMin")) +
@@ -310,13 +313,13 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
                 resetEnemy(enemy);
                 iterator.remove(); // Remove the enemy
             }
-
+            //xử lý địch đi ra ngoài màn hình
             if(enemy.y > HEIGHT){
                 iterator.remove();
             }
         }
 
-        // Update boss bullet
+        // Update đạn boss
         Iterator<Item> bossIterator = bossBullets.iterator();
         while (bossIterator.hasNext()) {
                 Item bossBullet = bossIterator.next();
@@ -326,32 +329,37 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
                     playerHealth -= bossDamage*40;
                     bossIterator.remove();
                 }
+                //xử lý đạn ra ngoài màn hình
                 if(bossBullet.y > HEIGHT){
                     bossIterator.remove();
                 }
         }
-        //Update boss beam
+        //Update laser boss
         beamUpdate();
         
-        //check boss collision
+        //check va chạm boss
         if(boss!=null){
             if(beam!=null){
+                //va chạm người chơi với laser boss
                 if(checkBossBeamCollision(player, beam)){
                     playerHealth -= bossDamage*2;
                 }
             }
+            //va chạm đạn người chơi với boss
             if(checkBossCollision(bullet, boss) && shoot==1){
                 shoot=0;
                 bossHeath -= playerDamage;
             }
+            //va chạm người chơi với boss
             if(checkBossCollision(player, boss)){
                 playerHealth -= bossDamage*2;
             }
+            
             if(bossHeath<=0){
                 playerScore += ConfigLoader.getInt("enemy.scoreValue");
-                boss = null;
+                boss = null;//xóa boss khỏi màn hình khi hết máu
                 boss_spawntime =0;
-                boss_deathtime = System.currentTimeMillis();
+                boss_deathtime = System.currentTimeMillis();//bắt đầu tính thời gian từ lúc chết để sinh quái
             }
         }
 
@@ -361,7 +369,7 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
             musicPlayer.stop();
         }
     }
-
+    //sinh boss
     private void spawnBoss(){
         try {
             boss = new boss(
@@ -389,46 +397,53 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
         }
     }
 
+    //atk1
     private void bossAttack1(){
+        //nếu biến boss_action thuộc khoảng dưới thì atk sẽ đc thực hiện
         if(System.currentTimeMillis() - boss_action >=10000 && System.currentTimeMillis() - boss_action <=26000){
+            //tự động đổi hướng khi boss chạm dìa màn hình
             if(boss.x<0){
                 bossDirection = 1;
             }
             else if(boss.x >= WIDTH - bossWidth){
                 bossDirection = -1;
             }
-            boss.x += bossSpeed*bossDirection;
+            boss.x += bossSpeed*bossDirection;//boss di chuyển ngang
 
+            //bắn ra 1 luồng đạn sau mỗi 2.5 giây
             if(System.currentTimeMillis()-bossLastShoot > 2500){
                 Item bossBullet = new Item();
                 bossBullet.x = boss.x+(bossWidth/2-85);
                 bossBullet.y = boss.y + bossHeight-100;
                 bossBullets.add(bossBullet);
-                bossLastShoot=System.currentTimeMillis();
+                bossLastShoot=System.currentTimeMillis();//check lần cuối bắn
             }
         }
         
-        //delay after action
+        //delay sau hành động kết thúc
         if(System.currentTimeMillis() - boss_action >26000 && System.currentTimeMillis() - boss_action <=26500){
             boss_act = false;
-            boss_action = System.currentTimeMillis() - 7000;
+            boss_action = System.currentTimeMillis() - 7000;//3 giây sau sẽ tiếp tục random hành động
         }
     }
-
+    //atk2
     private void bossAttack2(){
+        //nếu biến boss_action thuộc khoảng dưới thì atk sẽ đc thực hiện
         if(System.currentTimeMillis() - boss_action >=27000 && System.currentTimeMillis() - boss_action <=37000){
             if(!bossCharge && !bossBeam && System.currentTimeMillis()-bossBeamtime>=3000){
-                target_x = player.x-bossWidth/2+32;
+                target_x = player.x-bossWidth/2+32;//chọn vị trí thẳng với người chơi
                 bossChargeTime=System.currentTimeMillis();
-                bossCharge=true;
+                bossCharge=true;//bắt đầu tụ chưởng
             }
             if(bossCharge){
+                //di chuyển đến vị trí đã chọn
                 if(boss.x>target_x+5){
                     boss.x -= bossSpeed*8;
                 }
                 if(boss.x < target_x-5){
                     boss.x+= bossSpeed*8;
                 }
+                //sau 2 giâu tụ chưởng sẽ bắt đầu bắn laser
                 if (System.currentTimeMillis() - bossChargeTime >= 2000){
                     bossBeam=true;
                     bossBeamtime=System.currentTimeMillis();
@@ -437,26 +452,29 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
             }
             if(bossBeam){
                 loadBossBeamImages();
+                //tạo ra laser
                 beam = new Item();
                 beam.x = boss.x+(bossWidth/2-80);
                 beam.y = boss.y + bossHeight-20;
             }
         }
         
-        //delay after action
+        //delay sau khi hành động kết thúc
         if(System.currentTimeMillis() - boss_action >37000 && System.currentTimeMillis() - boss_action <37500){
             boss_act = false;
-            boss_action = System.currentTimeMillis() - 8000;
+            boss_action = System.currentTimeMillis() - 8000;//tiếp tục random hành động sau 2 giây
         }
     }
-
+    //update laser
     private void beamUpdate(){
+        //nếu đã bắn được 2 giây hoặc boss đã chết, xóa laser khỏi màn hình 
         if(System.currentTimeMillis()-bossBeamtime>=2000 || boss==null){
             bossBeam=false;
             beam=null;
         }
     }
 
+    //sinh quái tại vị trí ngẫu nhiên
     private void spawnEnemy() {
         enemyLength++;
         Item newEnemy = new Item();
@@ -465,25 +483,28 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
         newEnemy.vy = ConfigLoader.getInt("enemy.initialVelocityY");
         enemies.add(newEnemy);
     }
-
+    //check va chạm giữa 2 item
     private boolean checkCollision(Item a, Item b) {
         Rectangle aBounds = new Rectangle(a.x, a.y, TILE, TILE);
         Rectangle bBounds = new Rectangle(b.x, b.y, TILE, TILE);
         return aBounds.intersects(bBounds);
     }
 
+    //check va chạm với boss
     private boolean checkBossCollision(Item a, boss b) {
         Rectangle aBounds = new Rectangle(a.x, a.y, TILE, TILE);
         Rectangle bossBounds = new Rectangle(b.x, b.y, bossWidth , bossHeight);
         return aBounds.intersects(bossBounds);
     }
 
+    //check va chạm với đạn boss
     private boolean checkBossBulletCollision(Item a, Item b) {
         Rectangle aBounds = new Rectangle(a.x, a.y, TILE, TILE);
         Rectangle bossBounds = new Rectangle(b.x, b.y, 170 , 90);
         return aBounds.intersects(bossBounds);
     }
 
+    //check va chạm với laser boss
     private boolean checkBossBeamCollision(Item a, Item b) {
         Rectangle aBounds = new Rectangle(a.x, a.y, TILE, TILE);
         Rectangle bossBounds = new Rectangle(b.x, b.y, 160 , 380);
@@ -529,16 +550,20 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
 
         ArrayList<Item> bossBulletsCopy = new ArrayList<>(bossBullets);
         for(Item bossBullet : bossBulletsCopy){
+            //in đạn boss ra màn hình
             g.drawImage(bossBulletImg, bossBullet.x , bossBullet.y , 200, 100, null );
         }
         ArrayList<Item> enemiesCopy = new ArrayList<>(enemies);
+        //in quái ra màn hình
         for (Item enemy : enemiesCopy) {
             g.drawImage(enemyImg, enemy.x, enemy.y, TILE, TILE, null);
         }
         if(boss!=null && System.currentTimeMillis()-boss_spawntime >= 4000 && boss_spawntime!=0){
+            //in boss ra màn hình khi boss đã spawn được 4 giây
             g.drawImage(bossImg, boss.x, boss.y, bossWidth, bossHeight, null);
         }
         if(bossBeam && boss!=null){
+            //in laser ra màn hình khi đang bắn và boss chưa chết
             g.drawImage(bossBeamImg, beam.x, beam.y, 160,380,null);
         }
         g.setColor(Color.WHITE);
@@ -582,6 +607,7 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
             g.drawRect(WIDTH / 2 - 320, HEIGHT / 2 - 100, 640, 200);
         }
 
+        //thắng game
         if (gameWin) {
             g.setColor(Color.YELLOW);
             g.setFont(new Font("Arial", Font.BOLD, 40));
