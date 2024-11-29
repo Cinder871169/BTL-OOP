@@ -229,7 +229,7 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
         if(boss!=null){
             //get random action
             if(!boss_act && System.currentTimeMillis()-boss_action>=10000){
-                int[] actions = {10000,31000};
+                int[] actions = {10000,27000};
                 int randomAction = random.nextInt(actions.length);
                 boss_action = System.currentTimeMillis() - actions[randomAction];
                 boss_act = true;
@@ -390,7 +390,7 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
     }
 
     private void bossAttack1(){
-        if(System.currentTimeMillis() - boss_action >=10000 && System.currentTimeMillis() - boss_action <=27000){
+        if(System.currentTimeMillis() - boss_action >=10000 && System.currentTimeMillis() - boss_action <=26000){
             if(boss.x<0){
                 bossDirection = 1;
             }
@@ -407,39 +407,26 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
                 bossLastShoot=System.currentTimeMillis();
             }
         }
-
-        //reposition
-        if(System.currentTimeMillis() - boss_action >27000 && System.currentTimeMillis() - boss_action <=30000){
-            if(boss.x<0){
-                bossDirection = 1;
-            }
-            else if(boss.x >= WIDTH - bossWidth){
-                bossDirection = -1;
-            }
-            if(boss.x != ConfigLoader.getInt("boss.initialX")){
-                boss.x += bossSpeed*bossDirection;
-            }
-        }
         
         //delay after action
-        if(System.currentTimeMillis() - boss_action >30000 && System.currentTimeMillis() - boss_action <=30500){
+        if(System.currentTimeMillis() - boss_action >26000 && System.currentTimeMillis() - boss_action <=26500){
             boss_act = false;
-            boss_action = System.currentTimeMillis() - 8000;
+            boss_action = System.currentTimeMillis() - 7000;
         }
     }
 
     private void bossAttack2(){
-        if(System.currentTimeMillis() - boss_action >=31000 && System.currentTimeMillis() - boss_action <=43000){
-            if(!bossCharge && !bossBeam && System.currentTimeMillis()-bossBeamtime>=4000){
-                target_x = random.nextInt(WIDTH - bossWidth);
+        if(System.currentTimeMillis() - boss_action >=27000 && System.currentTimeMillis() - boss_action <=37000){
+            if(!bossCharge && !bossBeam && System.currentTimeMillis()-bossBeamtime>=3000){
+                target_x = player.x-bossWidth/2+32;
                 bossChargeTime=System.currentTimeMillis();
                 bossCharge=true;
             }
             if(bossCharge){
-                if(boss.x>target_x+10){
+                if(boss.x>target_x+5){
                     boss.x -= bossSpeed*8;
                 }
-                if(boss.x < target_x-10){
+                if(boss.x < target_x-5){
                     boss.x+= bossSpeed*8;
                 }
                 if (System.currentTimeMillis() - bossChargeTime >= 2000){
@@ -455,21 +442,9 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
                 beam.y = boss.y + bossHeight-20;
             }
         }
-        //reposition
-        if(System.currentTimeMillis() - boss_action >43000 && System.currentTimeMillis() - boss_action <=48000){
-            if(boss.x<0){
-                bossDirection = 1;
-            }
-            else if(boss.x >= WIDTH - bossWidth){
-                bossDirection = -1;
-            }
-            if(boss.x != ConfigLoader.getInt("boss.initialX")){
-                boss.x += bossSpeed*bossDirection;
-            }
-        }
         
         //delay after action
-        if(System.currentTimeMillis() - boss_action >48500 && System.currentTimeMillis() - boss_action <49000){
+        if(System.currentTimeMillis() - boss_action >37000 && System.currentTimeMillis() - boss_action <37500){
             boss_act = false;
             boss_action = System.currentTimeMillis() - 8000;
         }
