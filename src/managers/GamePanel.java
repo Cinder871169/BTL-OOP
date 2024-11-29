@@ -204,7 +204,7 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
         }
         loadBackgroundImages();
         loadBossImages();
-        if (playerScore %5 == 0 && playerScore >0 && playerScore != last_boss && !boss_active){
+        if (playerScore %10 == 0 && playerScore >0 && playerScore != last_boss && !boss_active){
             spawnBoss();
         }
 
@@ -239,16 +239,16 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
             bossAttack2();
         }
 
-        if (playerScore >= 6 && playerScore < 10 && !boss_active) {
+        if (playerScore >= 11 && playerScore < 20 && !boss_active) {
             enemyFolder = "enemy2";
-        } else if (playerScore >= 11 && !boss_active) {
+        } else if (playerScore >= 21 && !boss_active) {
             enemyFolder = "enemy3";
         }
-        if (playerScore ==10){
+        if (playerScore ==20){
             bossFolder="boss2";
             beamFolder="laser2";
         }
-        else if (playerScore ==15){
+        else if (playerScore ==30){
             bossFolder="boss3";
             beamFolder="laser3";
             waveFolder="wave3";
