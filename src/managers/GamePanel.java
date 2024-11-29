@@ -23,7 +23,7 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
     private final long OPTIMAL_TIME = 1000000000 / FPS;
     private long lastTime = System.nanoTime();
 
-    private boolean gameOver = false;
+    private boolean gameOver = false,gameWin=false;
     private Random random = new Random();
 
     private BufferedImage backgroundImg;
@@ -56,6 +56,9 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
     private long bossChargeTime=0,bossBeamtime=0;
     private int target_x=0;
     private Item beam;
+    private String bossFolder = "boss1";
+    private String beamFolder = "laser1";
+    private String waveFolder = "wave1";
 
     public GamePanel() {
         setPreferredSize(new Dimension(WIDTH, HEIGHT));
@@ -90,7 +93,7 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
 
     private void loadEnemyImages() {
         long etime = System.currentTimeMillis() - startTime;
-        int frameIndex = (int) ((etime / 100) % 10);
+        int frameIndex = (int) ((etime / 100) % 8);
         String enemyImgPath = String.format("/images/enemies1/%s/enemy%d.png", enemyFolder, frameIndex + 1);
         try {
             enemyImg = loadImage(enemyImgPath);
@@ -114,8 +117,8 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
 
     private void loadBossImages(){
         long etime = System.currentTimeMillis() - startTime;
-        int frameIndex = (int) ((etime / 100) % 12);
-        String bossImgPath = String.format("/images/bosses/boss1/idle%d.png", frameIndex + 1);
+        int frameIndex = (int) ((etime / 100) % 8);
+        String bossImgPath = String.format("/images/bosses/%s/idle%d.png", bossFolder, frameIndex + 1);
         try {
             bossImg = loadImage(bossImgPath);
         } catch (IOException e) {
@@ -127,7 +130,7 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
     private void loadBossBulletImages(){
         long etime = System.currentTimeMillis() - startTime;
         int frameIndex = (int) ((etime / 100) % 6);
-        String bossBulletImgPath = String.format("/images/BossBullet/wave1/wave%d.png", frameIndex + 1);
+        String bossBulletImgPath = String.format("/images/BossBullet/%s/wave%d.png", waveFolder,frameIndex + 1);
         try {
             bossBulletImg = loadImage(bossBulletImgPath);
         } catch (IOException e) {
@@ -139,7 +142,7 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
     private void loadBossBeamImages(){
         long etime = System.currentTimeMillis() - startTime;
         int frameIndex = (int) ((etime / 100) % 4);
-        String bossBeamImgPath = String.format("/images/BossBullet/laser1/laser%d.png", frameIndex + 1);
+        String bossBeamImgPath = String.format("/images/BossBullet/%s/laser%d.png", beamFolder ,frameIndex + 1);
         try {
             bossBeamImg = loadImage(bossBeamImgPath);
         } catch (IOException e) {
@@ -196,6 +199,9 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
     private int enemySpawnInterval = ConfigLoader.getInt("enemy.spawnInterval") * 1000; // Interval in milliseconds
 
     private void update() {
+        if (paused || gameOver == true || gameWin==true) {
+            return; // Skip all updates when the game is paused or gameOver or Win
+        }
         loadBackgroundImages();
         loadBossImages();
         if (playerScore %5 == 0 && playerScore >0 && playerScore != last_boss && !boss_active){
@@ -210,9 +216,12 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
                     boss.y+= bossSpeed;
                 }
             }
-            else if(System.currentTimeMillis()-boss_deathtime>=4000 && boss_deathtime!=0){
+            if(System.currentTimeMillis()-boss_deathtime>=4000 && boss_deathtime!=0){
                 boss_deathtime=0;
                 boss_active = false;
+            }
+            if(System.currentTimeMillis()-boss_deathtime>=3000 && boss_deathtime!=0 && bossFolder=="boss3"){
+                gameWin = true;
             }
         }
 
@@ -230,10 +239,19 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
             bossAttack2();
         }
 
-        if (playerScore >= 5 && playerScore < 10 && !boss_active) {
+        if (playerScore >= 6 && playerScore < 10 && !boss_active) {
             enemyFolder = "enemy2";
         } else if (playerScore >= 11 && !boss_active) {
             enemyFolder = "enemy3";
+        }
+        if (playerScore ==10){
+            bossFolder="boss2";
+            beamFolder="laser2";
+        }
+        else if (playerScore ==15){
+            bossFolder="boss3";
+            beamFolder="laser3";
+            waveFolder="wave3";
         }
 
         // Di chuyển ngang
@@ -298,10 +316,9 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
             }
         }
 
-        //check boss collision, update boss bullet
-        if(boss!=null){
-            Iterator<Item> bossIterator = bossBullets.iterator();
-            while (bossIterator.hasNext()) {
+        // Update boss bullet
+        Iterator<Item> bossIterator = bossBullets.iterator();
+        while (bossIterator.hasNext()) {
                 Item bossBullet = bossIterator.next();
                 loadBossBulletImages();
                 bossBullet.y += bullet.vy/5;
@@ -312,7 +329,12 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
                 if(bossBullet.y > HEIGHT){
                     bossIterator.remove();
                 }
-            }
+        }
+        //Update boss beam
+        beamUpdate();
+        
+        //check boss collision
+        if(boss!=null){
             if(beam!=null){
                 if(checkBossBeamCollision(player, beam)){
                     playerHealth -= bossDamage*2;
@@ -431,10 +453,6 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
                 beam = new Item();
                 beam.x = boss.x+(bossWidth/2-80);
                 beam.y = boss.y + bossHeight-20;
-                if(System.currentTimeMillis()-bossBeamtime>=2000){
-                    bossBeam=false;
-                    beam=null;
-                }
             }
         }
         //reposition
@@ -454,6 +472,13 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
         if(System.currentTimeMillis() - boss_action >48500 && System.currentTimeMillis() - boss_action <49000){
             boss_act = false;
             boss_action = System.currentTimeMillis() - 8000;
+        }
+    }
+
+    private void beamUpdate(){
+        if(System.currentTimeMillis()-bossBeamtime>=2000 || boss==null){
+            bossBeam=false;
+            beam=null;
         }
     }
 
@@ -524,7 +549,7 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
         if (shoot == 1) {
             g.drawImage(bulletImg, bullet.x + 19, bullet.y, 25, 60, null);
         }
-        if (!gameOver)
+        if (!gameOver && !gameWin)
             g.drawImage(playerImg, player.x, player.y, TILE, TILE, null);
 
         ArrayList<Item> bossBulletsCopy = new ArrayList<>(bossBullets);
@@ -582,12 +607,21 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
             g.drawRect(WIDTH / 2 - 320, HEIGHT / 2 - 100, 640, 200);
         }
 
+        if (gameWin) {
+            g.setColor(Color.YELLOW);
+            g.setFont(new Font("Arial", Font.BOLD, 40));
+            g.drawString("VICTORY", WIDTH / 2 - 100, HEIGHT / 2 - 50);
+            g.drawString("Your score: " + playerScore, WIDTH / 2 - 150, HEIGHT / 2);
+            g.drawString("Press R to return to main menu", WIDTH / 2 - 300, HEIGHT / 2 + 50);
+            g.drawRect(WIDTH / 2 - 320, HEIGHT / 2 - 100, 640, 200);
+        }
+
         g.dispose();
     }
 
     @Override
     public void keyPressed(KeyEvent e) {
-        if (gameOver && e.getKeyCode() == KeyEvent.VK_R) {
+        if ((gameOver || gameWin) && e.getKeyCode() == KeyEvent.VK_R) {
             returnToMainMenu();
         } else if (paused && e.getKeyCode() == KeyEvent.VK_R) {
             returnToMainMenu(); // Quay lại menu chính khi đang tạm dừng
