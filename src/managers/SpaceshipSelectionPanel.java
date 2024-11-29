@@ -29,7 +29,7 @@ public class SpaceshipSelectionPanel extends JPanel {
         setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
         setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 
-        // Load spaceship details
+        // Tải thông tin tàu bay
         spaceships = new Spaceship[3];
         spaceshipPanels = new JPanel[3];
         try {
@@ -42,7 +42,7 @@ public class SpaceshipSelectionPanel extends JPanel {
             return;
         }
 
-        // Create panels for spaceship selection
+        // Tạo bảng chọn tàu bay
         for (int i = 0; i < spaceships.length; i++) {
             spaceshipPanels[i] = createSpaceshipPanel(i);
             add(spaceshipPanels[i]);
@@ -63,7 +63,7 @@ public class SpaceshipSelectionPanel extends JPanel {
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
         panel.setBorder(BorderFactory.createLineBorder(Color.GRAY));
 
-        // Resize spaceship image
+        // Thay đổi kích thước tàu bay
         Image scaledImage = spaceships[index].getImage().getScaledInstance(SPACESHIP_IMAGE_WIDTH,
                 SPACESHIP_IMAGE_HEIGHT, Image.SCALE_SMOOTH);
 
@@ -71,7 +71,7 @@ public class SpaceshipSelectionPanel extends JPanel {
         imageLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
         panel.add(imageLabel);
 
-        // Add Spaceship info labels
+        // Thêm thông tin tàu bay
         panel.add(createSpaceshipInfoLabel("HP: " + spaceships[index].getHp()));
         panel.add(createSpaceshipInfoLabel("Damage: " + spaceships[index].getDamage()));
         panel.add(createSpaceshipInfoLabel("Speed: " + spaceships[index].getSpeed()));
@@ -87,7 +87,7 @@ public class SpaceshipSelectionPanel extends JPanel {
         });
         panel.add(selectButton);
 
-        // Mouse hover effect
+        // Hiệu ứng khi di chuột đến
         panel.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseEntered(MouseEvent e) {
