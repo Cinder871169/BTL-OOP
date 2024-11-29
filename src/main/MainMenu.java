@@ -7,7 +7,6 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.imageio.ImageIO;
 import javax.swing.*;
-
 import managers.GamePanel;
 import managers.MusicPlayer;
 import managers.SpaceshipSelectionPanel;
@@ -19,10 +18,17 @@ public class MainMenu extends JPanel {
     private List<BufferedImage> menuImages; // Danh sách các ảnh
     private int currentImageIndex = 0; // Chỉ số ảnh hiện tại
     private Timer animationTimer; // Timer để thực hiện animation
+    private BufferedImage logo;
 
     public MainMenu() {
         musicPlayer = new MusicPlayer("/sound/menu.wav");
         musicPlayer.loop();
+
+        try {
+            logo = ImageIO.read(getClass().getResource("/images/logo.png")); // Đảm bảo logo.png có trong folder /images
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
         menuImages = new ArrayList<>();
         loadImagesFromFolder("/images/menu"); // Load tất cả ảnh từ folder
@@ -97,9 +103,18 @@ public class MainMenu extends JPanel {
     @Override
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
+        
+        // Vẽ ảnh nền động (menu background)
         if (!menuImages.isEmpty()) {
             BufferedImage currentImage = menuImages.get(currentImageIndex);
             g.drawImage(currentImage, 0, 0, null);
+        }
+        
+        // Vẽ ảnh logo ở chính giữa trên cùng
+        if (logo != null) {
+            int logoX = getWidth()/2 - logo.getWidth();  // Xác định vị trí X để căn giữa
+            int logoY = 50;  // Vị trí Y cho logo ở trên cùng
+            g.drawImage(logo, logoX, logoY,logo.getWidth()*2,logo.getHeight()*2, null);
         }
     }
 
